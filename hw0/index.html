@@ -18,7 +18,8 @@ import { OBJLoader } from 'https://unpkg.com/three/examples/jsm/loaders/OBJLoade
 // my script
 
 var camera, scene, renderer;
-var Thomas, isWalking = 0, angle = 0;
+var Thomas, isWalking = 0;
+var clock = new THREE.Clock();
 init();
 animate();
 
@@ -50,10 +51,12 @@ function onWindowResize() {
 }
 
 function animate() {
+	let angle = clock.getDelta();
 	if(Thomas !== undefined){
 		if(isWalking === 0 | isWalking === 2) walk();
-		else turn();
+		else turn(angle);
 	}
+	
 	renderer.render(scene,camera);
 	requestAnimationFrame( animate );
 }
@@ -76,26 +79,35 @@ function walk(){
 	}
 }
 
-function turn(){
-	if(Math.floor(angle) === 3 & isWalking === 1){
+function turn(angle){
+	var z = Thomas.position.z;
+	if(Math.floor(z) === -50 & isWalking === 1){
 		isWalking = 2;
 		Thomas.rotation.y = Math.PI/2;
+		Thomas.position.z = -50;
+		Thomas.position.x = 50;
 	}
-	else if(Math.floor(angle) === 6 & isWalking === 3) {
+	else if(Math.floor(z) === 50 & isWalking === 3) {
 		isWalking = 0;
 		Thomas.rotation.y = -Math.PI/2;
+		Thomas.position.z = 50;
+		Thomas.position.x = -50;
 	}
 	else if(isWalking === 1){
-		angle += 0.01;
-		Thomas.rotation.y += 0.01;
-		Thomas.position.set(50*Math.sin(angle) + 50, 5, 50*Math.cos(angle));
+		Thomas.rotation.y += 0.013;
+		Thomas.position.z -= 50 * angle / 2;
+		if(Math.floor(z) > 0)
+			Thomas.position.x += 25 * angle / 2;
+		else Thomas.position.x -= 25 * angle / 2;
 	}
 	else if(isWalking === 3){
-		angle += 0.01;
-		Thomas.rotation.y += 0.01;
-		Thomas.position.set(50*Math.sin(angle) - 50, 5, 50*Math.cos(angle));
+		Thomas.rotation.y += 0.013;
+		Thomas.position.z += 50 * angle / 2;
+		if(Math.floor(z) < 0)
+			Thomas.position.x -= 25 * angle / 2;
+		else Thomas.position.x += 25 * angle / 2;
 	}
-	
+	console.log(Thomas.position);
 }
 
 function readModel (modelName, targetSize=20) {
