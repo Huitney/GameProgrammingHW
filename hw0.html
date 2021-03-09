@@ -14,7 +14,8 @@
 <body style='overflow:hidden'> 
 
 <div id='heading'>
-	<button id='toggle'>Press</button>
+	<h3 style = "color:red">Homework 0</h3>
+	<button id = 'buttonToGo'>Press</button>
 </div>
 
 <script type ="module">
@@ -26,15 +27,22 @@ import { MTLLoader } from 'https://unpkg.com/three/examples/jsm/loaders/MTLLoade
 import { OBJLoader } from 'https://unpkg.com/three/examples/jsm/loaders/OBJLoader.js';
 // my script
 
-$('#toggle').click(function(){
-	go = ! go;
-});
-
 var camera, scene, renderer;
 var Thomas, isWalking = 0, go = true;
 var clock = new THREE.Clock();
 init();
 animate();
+
+document.getElementById("buttonToGo").onclick = function (){
+	if(go){
+		document.getElementById("buttonToGo").innerHTML = "go";
+	}
+	else{
+		document.getElementById("buttonToGo").innerHTML = "stop";
+	}
+	go =!go;
+	
+}
 
 function init() {
 	scene = new THREE.Scene();
@@ -64,11 +72,14 @@ function onWindowResize() {
 }
 
 function animate() {
+	
 	let angle = clock.getDelta();
-	if(turn){
-		if(Thomas !== undefined){
-			if(isWalking === 0 | isWalking === 2) walk();
-			else turn(angle);
+	if(go){
+		if(turn){
+			if(Thomas !== undefined){
+				if(isWalking === 0 | isWalking === 2) walk();
+				else turn(angle);
+			}
 		}
 	}
 	renderer.render(scene,camera);
@@ -121,7 +132,7 @@ function turn(angle){
 			Thomas.position.x -= 25 * angle / 2;
 		else Thomas.position.x += 25 * angle / 2;
 	}
-	console.log(Thomas.position);
+	
 }
 
 function readModel (modelName, targetSize=20) {
