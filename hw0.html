@@ -97,10 +97,10 @@ function walk(){
 		Thomas.position.x = -50;
 	}
 	else if(isWalking === 0){
-		Thomas.position.x += 0.4;
+		Thomas.position.x += 1.2;
 	}
 	else if(isWalking === 2){
-		Thomas.position.x -= 0.4;
+		Thomas.position.x -= 1.2;
 	}
 }
 
@@ -119,18 +119,18 @@ function turn(angle){
 		Thomas.position.x = -50;
 	}
 	else if(isWalking === 1){
-		Thomas.rotation.y += 0.013;
-		Thomas.position.z -= 50 * angle / 2;
+		Thomas.rotation.y += 0.026;
+		Thomas.position.z -= 50 * angle;
 		if(Math.floor(z) > 0)
-			Thomas.position.x += 25 * angle / 2;
-		else Thomas.position.x -= 25 * angle / 2;
+			Thomas.position.x += 25 * angle;
+		else Thomas.position.x -= 25 * angle;
 	}
 	else if(isWalking === 3){
-		Thomas.rotation.y += 0.013;
-		Thomas.position.z += 50 * angle / 2;
+		Thomas.rotation.y += 0.026;
+		Thomas.position.z += 50 * angle;
 		if(Math.floor(z) < 0)
-			Thomas.position.x -= 25 * angle / 2;
-		else Thomas.position.x += 25 * angle / 2;
+			Thomas.position.x -= 25 * angle;
+		else Thomas.position.x += 25 * angle;
 	}
 	
 }
