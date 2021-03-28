@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>
+</title>
+<style>
+#heading{
+	text-align: center;
+	position:absolute;
+	width:100vw;
+}
+</style>
+</head>
+<body style='overflow:hidden'> 
+<audio id="collisionsound" style="display:none">
+<source src="sounds/collision3.wav" type='audio/wav'>
+</audio>
+<div id='heading'>
+	<h3 style = "color:red">Homework 1</h3>
+</div>
+
+<script type ="module">
+javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+
+import * as THREE from 'https://unpkg.com/three/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js';
+import { MTLLoader } from 'https://unpkg.com/three/examples/jsm/loaders/MTLLoader.js';
+import { OBJLoader } from 'https://unpkg.com/three/examples/jsm/loaders/OBJLoader.js';
+// my script
+
+var camera, scene, renderer;
+var angle = 0, pucks = [];
+
+
+const R = 4;
+
+class Puck {
+   constructor (pos, vel, mesh) {
+		this.pos = pos;
+		this.vel = vel;
+		this.force = new THREE.Vector3(1,0,0);
+		this.mesh = mesh;
+		scene.add (this.mesh);
+
+		mesh.material.color = new THREE.Color().setHSL (Math.random(), .5, .7);
+		this.light = new THREE.PointLight( 0xffffff, 0.5);
+		this.light.position.copy(this.pos);
+		this.light.color.copy(this.mesh.material.color);
+		scene.add (this.light);
+   }
+   
+   update(dt) {
+		this.vel.add (this.force.clone().multiplyScalar (dt));
+		this.pos.add (this.vel.clone().multiplyScalar (dt));
+  
+		// wall-collision
+		if (this.pos.z < -95+R) {
+			this.vel.z = - this.vel.z;
+
+			this.pos.z = -95+R;
+		}
+		if (this.pos.z > 95-R) {
+			this.vel.z = - this.vel.z;
+
+			this.pos.z = 95-R;
+		}
+		if (this.pos.x > 95-R) {
+			this.vel.x = - this.vel.x;
+
+			this.pos.x = 95-R;
+		}
+		if (this.pos.x < -95+R) {
+			this.vel.x = - this.vel.x;
+
+			this.pos.x = -95+R;
+		}
+
+		this.mesh.position.copy (this.pos);
+		this.light.position.copy (this.pos);
+		this.light.position.y += 8;
+
+	}
+
+}
+
+class Wall{
+	constructor (pos, rot, mesh) {
+		this.pos = pos;
+		this.rot = rot;
+		this.force = new THREE.Vector3(1,0,1);
+		this.mesh = mesh;
+		this.mesh.rotation.y = this.rot;
+		this.mesh.position.copy (this.pos);
+		scene.add (this.mesh);
+
+   }
+}
+
+function buildPuckMesh (mycolor) {
+	let puckMesh = new THREE.Mesh (new THREE.CylinderGeometry(10,10,4,20), new THREE.MeshPhongMaterial());
+	puckMesh.material.color = mycolor;
+	return puckMesh;
+}
+
+init();
+animate();
+
+function init() {
+	scene = new THREE.Scene();
+	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+	camera.position.set (0,400,500);
+	renderer = new THREE.WebGLRenderer({antialias: true});
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0xeeeeee);
+	window.addEventListener('resize', onWindowResize, false);
+	document.body.appendChild(renderer.domElement);
+	let controls = new OrbitControls(camera, renderer.domElement);
+		
+	var floor = new THREE.Mesh (new THREE.PlaneGeometry(200,200), new THREE.MeshPhongMaterial({side: THREE.DoubleSide}));
+	floor.rotation.x = -Math.PI/2;
+	scene.add (floor);
+	
+	var light = new THREE.PointLight( 0xffffff, 0.5);
+	light.position.set(0, 50, 0);
+	scene.add( light );
+	var light2 = new THREE.AmbientLight(0x181829, 0.5);
+	light2.position.set(100, 100, 100);
+	scene.add( light2 );
+	
+	
+	for(let i = 0;i < 5;i++){
+		let puckMesh = buildPuckMesh (new THREE.Color().setHSL (Math.random(), .9, .4));
+		let puck = new Puck(new THREE.Vector3(Math.random()*100-50,4,Math.random()*100-50), new THREE.Vector3(0,0,0), puckMesh);
+		pucks.push (puck);
+	}
+	//wall
+	var wall = new Wall(new THREE.Vector3(0, 20, 110), 0, new THREE.Mesh (new THREE.BoxGeometry(240,40, 20), new THREE.MeshPhongMaterial({color:"gray", transparent: true, opacity:0.3})));
+	var wall1 = new Wall(new THREE.Vector3(0, 20, -110), 0, new THREE.Mesh (new THREE.BoxGeometry(240,40, 20), new THREE.MeshPhongMaterial({color:"gray", transparent: true, opacity:0.3})));
+	var wall2 = new Wall(new THREE.Vector3(110, 20, 0), Math.PI/2, new THREE.Mesh (new THREE.BoxGeometry(200,40, 20), new THREE.MeshPhongMaterial({color:"gray", transparent: true, opacity:0.3})));
+	var wall3 = new Wall(new THREE.Vector3(-110, 20, 0), Math.PI/2, new THREE.Mesh (new THREE.BoxGeometry(200,40, 20), new THREE.MeshPhongMaterial({color:"gray", transparent: true, opacity:0.3})));
+		
+
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+	var dt = 0.1;
+	for (let i = 0; i < pucks.length; i++){
+		pucks[i].update (dt);
+		console.log(pucks[i].pos);
+		for(let j = i + 1;j < 5;j++){
+			CheckIntersect(i, j, dt);
+		}
+	}
+	renderer.render(scene,camera);
+	requestAnimationFrame( animate );
+}
+
+function CheckIntersect(i, j, dt){
+	if(pucks[j].pos.distanceTo(pucks[i].pos) <= 22){
+		pucks[i].force.x = Math.floor((pucks[j].pos.x - pucks[i].pos.x)%2);
+		pucks[i].force.z = Math.floor((pucks[j].pos.z - pucks[i].pos.z)%2);
+		pucks[j].force.x = Math.floor((pucks[i].pos.x - pucks[j].pos.x)%2);
+		pucks[j].force.z = Math.floor((pucks[i].pos.z - pucks[j].pos.z)%2);
+		pucks[i].vel.add (pucks[i].force.clone().multiplyScalar (dt/5));
+		pucks[i].pos.add (pucks[i].vel.clone().multiplyScalar (dt/5));
+		pucks[i].mesh.position.copy (pucks[i].pos);
+		pucks[j].vel.add (pucks[j].force.clone().multiplyScalar (dt/5));
+		pucks[j].pos.add (pucks[j].vel.clone().multiplyScalar (dt/5));
+		pucks[j].mesh.position.copy (pucks[j].pos);
+	}
+	/*if(pucks[j].pos.distanceTo(pucks[i].pos) <= 20){
+		let x1 = pucks[i].pos.clone();
+		let x2 = pucks[j].pos.clone();
+		let v1 = pucks[i].vel.clone();
+		let v2 = pucks[j].vel.clone();
+		let v12 = v1.clone().sub(v2.clone());
+		let x12 = x1.clone().sub(x2.clone());
+		v1 = v1.sub ((v12.clone().x*x12.clone().x+v12.clone().z*x12.clone().z)/(x12.clone().x*x12.clone().x+x12.clone().z*x12.clone().z)*x12.clone());
+		x12.x =- x12.x;
+		x12.z =- x12.z;
+		v12.x =- v12.x;
+		v12.z =- v12.z;
+		v2 = v2.sub ((v12.clone().x*x12.clone().x+v12.clone().z*x12.clone().z)/(x12.clone().x*x12.clone().x+x12.clone().z*x12.clone().z)*x12.clone());
+		pucks[i].vel = v1;
+		pucks[j].vel = v2;
+	}*/
+}
+
+</script>
+
+</body>
+</html>
