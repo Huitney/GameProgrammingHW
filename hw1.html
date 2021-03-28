@@ -12,12 +12,14 @@
 </style>
 </head>
 <body style='overflow:hidden'> 
-<audio id="collisionsound" style="display:none">
-<source src="sounds/collision3.wav" type='audio/wav'>
-</audio>
+
 <div id='heading'>
 	<h3 style = "color:red">Homework 1</h3>
+	<button id = "soundBT">Sound On</button>
 </div>
+<audio id="collisionsound" style="display:none">
+<source src="https://jyunming-chen.github.io/game3js/gameHWhelpers/sounds/collision3.wav" type='audio/wav'>
+</audio>
 
 <script type ="module">
 javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
@@ -28,9 +30,22 @@ import { MTLLoader } from 'https://unpkg.com/three/examples/jsm/loaders/MTLLoade
 import { OBJLoader } from 'https://unpkg.com/three/examples/jsm/loaders/OBJLoader.js';
 // my script
 
+document.getElementById("soundBT").onclick = function (){
+	if(BTOn){
+		sound.muted = true;
+		document.getElementById("soundBT").innerHTML = "Sound On";
+	}
+	else{
+		sound.muted = false;
+		document.getElementById("soundBT").innerHTML = "Sound Off";
+	}
+	BTOn =! BTOn;
+	
+}
+
 var camera, scene, renderer;
 var angle = 0, pucks = [];
-
+var BTOn = false, sound;
 
 const R = 4;
 
@@ -38,7 +53,6 @@ class Puck {
    constructor (pos, vel, mesh) {
 		this.pos = pos;
 		this.vel = vel;
-		this.force = new THREE.Vector3(1,0,0);
 		this.mesh = mesh;
 		scene.add (this.mesh);
 
@@ -50,29 +64,32 @@ class Puck {
    }
    
    update(dt) {
-		this.vel.add (this.force.clone().multiplyScalar (dt));
-		this.pos.add (this.vel.clone().multiplyScalar (dt));
+		this.pos.add (this.vel.clone());
   
 		// wall-collision
 		if (this.pos.z < -95+R) {
 			this.vel.z = - this.vel.z;
 
 			this.pos.z = -95+R;
+			sound.play();
 		}
 		if (this.pos.z > 95-R) {
 			this.vel.z = - this.vel.z;
 
 			this.pos.z = 95-R;
+			sound.play();
 		}
 		if (this.pos.x > 95-R) {
 			this.vel.x = - this.vel.x;
 
 			this.pos.x = 95-R;
+			sound.play();
 		}
 		if (this.pos.x < -95+R) {
 			this.vel.x = - this.vel.x;
 
 			this.pos.x = -95+R;
+			sound.play();
 		}
 
 		this.mesh.position.copy (this.pos);
@@ -127,10 +144,12 @@ function init() {
 	light2.position.set(100, 100, 100);
 	scene.add( light2 );
 	
+	sound = document.getElementById('collisionsound');
+	sound.muted = true;
 	
 	for(let i = 0;i < 5;i++){
 		let puckMesh = buildPuckMesh (new THREE.Color().setHSL (Math.random(), .9, .4));
-		let puck = new Puck(new THREE.Vector3(Math.random()*100-50,4,Math.random()*100-50), new THREE.Vector3(0,0,0), puckMesh);
+		let puck = new Puck(new THREE.Vector3(Math.random()*100-50,4,Math.random()*100-50), new THREE.Vector3(Math.random()*2-1,0,Math.random()*2-1), puckMesh);
 		pucks.push (puck);
 	}
 	//wall
@@ -152,44 +171,22 @@ function animate() {
 	var dt = 0.1;
 	for (let i = 0; i < pucks.length; i++){
 		pucks[i].update (dt);
-		console.log(pucks[i].pos);
 		for(let j = i + 1;j < 5;j++){
-			CheckIntersect(i, j, dt);
+			CheckIntersect(i, j);
 		}
 	}
 	renderer.render(scene,camera);
 	requestAnimationFrame( animate );
 }
 
-function CheckIntersect(i, j, dt){
-	if(pucks[j].pos.distanceTo(pucks[i].pos) <= 22){
-		pucks[i].force.x = Math.floor((pucks[j].pos.x - pucks[i].pos.x)%2);
-		pucks[i].force.z = Math.floor((pucks[j].pos.z - pucks[i].pos.z)%2);
-		pucks[j].force.x = Math.floor((pucks[i].pos.x - pucks[j].pos.x)%2);
-		pucks[j].force.z = Math.floor((pucks[i].pos.z - pucks[j].pos.z)%2);
-		pucks[i].vel.add (pucks[i].force.clone().multiplyScalar (dt/5));
-		pucks[i].pos.add (pucks[i].vel.clone().multiplyScalar (dt/5));
-		pucks[i].mesh.position.copy (pucks[i].pos);
-		pucks[j].vel.add (pucks[j].force.clone().multiplyScalar (dt/5));
-		pucks[j].pos.add (pucks[j].vel.clone().multiplyScalar (dt/5));
-		pucks[j].mesh.position.copy (pucks[j].pos);
+function CheckIntersect(i, j){
+	let dis = pucks[j].pos.clone().sub(pucks[i].pos.clone());
+	if(dis.length() <= 20){
+	
+		pucks[j].vel.copy(dis.clone().normalize());
+		pucks[i].vel.copy(dis.clone().multiplyScalar(-1).normalize());
+		sound.play();
 	}
-	/*if(pucks[j].pos.distanceTo(pucks[i].pos) <= 20){
-		let x1 = pucks[i].pos.clone();
-		let x2 = pucks[j].pos.clone();
-		let v1 = pucks[i].vel.clone();
-		let v2 = pucks[j].vel.clone();
-		let v12 = v1.clone().sub(v2.clone());
-		let x12 = x1.clone().sub(x2.clone());
-		v1 = v1.sub ((v12.clone().x*x12.clone().x+v12.clone().z*x12.clone().z)/(x12.clone().x*x12.clone().x+x12.clone().z*x12.clone().z)*x12.clone());
-		x12.x =- x12.x;
-		x12.z =- x12.z;
-		v12.x =- v12.x;
-		v12.z =- v12.z;
-		v2 = v2.sub ((v12.clone().x*x12.clone().x+v12.clone().z*x12.clone().z)/(x12.clone().x*x12.clone().x+x12.clone().z*x12.clone().z)*x12.clone());
-		pucks[i].vel = v1;
-		pucks[j].vel = v2;
-	}*/
 }
 
 </script>
