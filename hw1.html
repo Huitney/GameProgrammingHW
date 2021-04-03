@@ -188,30 +188,24 @@ function animate() {
 
 function CheckIntersect(i, j){
 	let dis = pucks[j].pos.clone().sub(pucks[i].pos.clone());
-	/*if(dis.length() <= 20){
-	
-		pucks[j].vel.copy(dis.clone().normalize());
-		pucks[i].vel.copy(dis.clone().multiplyScalar(-1).normalize());
-		sound.play();
-	}*/
 	if(dis.length() <= 20){
 		let x1 = pucks[i].pos.clone();
 		let x2 = pucks[j].pos.clone();
+		
 		let v1 = pucks[i].vel.clone();
 		let v2 = pucks[j].vel.clone();
-		let v12 = v1.clone().sub(v2.clone());
-		let x12 = x1.clone().sub(x2.clone());
-		let value = (v12.clone().x*x12.clone().x+v12.clone().z*x12.clone().z)/(x12.clone().x*x12.clone().x+x12.clone().z*x12.clone().z);
-		x12.x *= value;
-		x12.z *= value;
-		v1 = v1.clone().sub (x12.clone());
-		x12.x =- x12.x;
-		x12.z =- x12.z;
-		v12.x =- v12.x;
-		v12.z =- v12.z;
-		v2 = v2.clone().sub (x12.clone());
-		pucks[i].vel = v1;
-		pucks[j].vel = v2;
+		
+		let v12 = v1.clone().sub(v2);
+		let x12 = x1.sub(x2);
+		
+		let correction = x12.multiplyScalar( v12.dot(x12) / x12.lengthSq() );
+		
+		v1.sub(correction);
+		v2.add(correction);
+		
+		pucks[i].vel.copy(v1);
+		pucks[j].vel.copy(v2);
+		
 		sound.play();
 	}
 }
