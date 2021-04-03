@@ -46,6 +46,7 @@ document.getElementById("soundBT").onclick = function (){
 var camera, scene, renderer;
 var angle = 0, pucks = [];
 var BTOn = false, sound;
+var clock = new THREE.Clock();
 
 const R = 4;
 
@@ -149,9 +150,9 @@ function init() {
 	//puck
 	
 	let puckMesh = buildPuckMesh (new THREE.Color().setHSL (Math.random(), .9, .4));
-	let puck = new Puck(new THREE.Vector3(20,4,0), new THREE.Vector3(-1,0,0), puckMesh);
+	let puck = new Puck(new THREE.Vector3(20,4,0), new THREE.Vector3(-3,0,0), puckMesh);
 	let puckMesh1 = buildPuckMesh (new THREE.Color().setHSL (Math.random(), .9, .4));
-	let puck1 = new Puck(new THREE.Vector3(-20,4,0), new THREE.Vector3(1,0,0), puckMesh1);
+	let puck1 = new Puck(new THREE.Vector3(-20,4,0), new THREE.Vector3(3,0,0), puckMesh1);
 	pucks.push (puck);
 	pucks.push (puck1);
 	//wall
@@ -170,7 +171,7 @@ function onWindowResize() {
 }
 
 function animate() {
-	var dt = 0.1;
+	var dt = clock.getDelta();
 	for (let i = 0; i < pucks.length; i++){
 		pucks[i].update (dt);
 		for(let j = i + 1;j < pucks.length;j++){
@@ -182,8 +183,8 @@ function animate() {
 }
 
 function CheckIntersect(i, j){
-	let dis = pucks[j].pos.clone().sub(pucks[i].pos.clone());
-	if(dis.length() <= 20){
+	let dis = pucks[j].pos.clone().distanceTo(pucks[i].pos);
+	if(dis <= 20){
 		let x1 = pucks[i].pos.clone();
 		let x2 = pucks[j].pos.clone();
 		let v1 = pucks[i].vel.clone();
