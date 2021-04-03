@@ -143,13 +143,20 @@ function init() {
 	var light2 = new THREE.AmbientLight(0x181829, 0.5);
 	light2.position.set(100, 100, 100);
 	scene.add( light2 );
-	
+	//sound
 	sound = document.getElementById('collisionsound');
 	sound.muted = true;
-	
+	//puck
 	for(let i = 0;i < 5;i++){
 		let puckMesh = buildPuckMesh (new THREE.Color().setHSL (Math.random(), .9, .4));
 		let puck = new Puck(new THREE.Vector3(Math.random()*100-50,4,Math.random()*100-50), new THREE.Vector3(Math.random()*2-1,0,Math.random()*2-1), puckMesh);
+		for(let j = 0;j < i;j++){
+			let dis = pucks[j].pos.clone().sub(puck.pos.clone());
+			if(dis.length() <= 21){
+				puck = new Puck(new THREE.Vector3(Math.random()*100-50,4,Math.random()*100-50), new THREE.Vector3(Math.random()*2-1,0,Math.random()*2-1), puckMesh);
+				j = -1;
+			} 
+		}
 		pucks.push (puck);
 	}
 	//wall
