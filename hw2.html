@@ -190,7 +190,7 @@ function animate() {
 	if(Math.floor(x) === 0 & Math.floor(z) === 0){
 		time = new Date();
 		t1 = time.getSeconds();
-		if((t1 - t0) > 1){
+		if(Math.abs(t1 - t0) > 1){
 			bigCircle =! bigCircle;
 			t0 = t1;
 		}
