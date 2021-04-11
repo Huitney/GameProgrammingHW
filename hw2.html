@@ -43,7 +43,7 @@ document.getElementById("3PV").onclick = function (){
 
 var camera, scene, renderer;
 var texture, steve, personView3 = 0;
-
+var bigCircle = true;
 var pose1 = {
 	lThigh: Math.PI/6,
 	rThigh: -Math.PI/6
@@ -57,11 +57,12 @@ var keys = [
 	[0.5, pose2],
 	[1, pose1]
 ];
-var T = 1;
-var clock = new THREE.Clock();
+var T = .5;
+var clock = new THREE.Clock(), t0, t1;
+var time = new Date();
 var ts = clock.getElapsedTime();
 
-var theta = 0;
+var thetaB = 0, thetaS = Math.PI;
 
 function keyframe(t) {
 	var s = ((t - ts) % T) / T;
@@ -86,15 +87,21 @@ class Steve {
 		this.legR = legR;
 		this.armL = armL;
 		this.armR = armR;
-		this.head.position.set(0,2*hh+ww,0);
+		
+		this.legL.position.set(ww/2,-hh,0);
+		this.legR.position.set(-ww/2,-hh,0);
+		this.armL.position.set(3*ww/2,0,0);
+		this.armR.position.set(-3*ww/2,0,0);
+		this.head.position.set(0,hh/2+ww,0);
+		
+		this.body.add(this.head,this.legL, this.legR, this.armL, this.armR);
 		this.body.position.set(0,3*hh/2,0);
-		this.legL.position.set(ww/2,hh/2,0);
-		this.legR.position.set(-ww/2,hh/2,0);
-		this.armL.position.set(3*ww/2,3*hh/2,0);
-		this.armR.position.set(-3*ww/2,3*hh/2,0);
+		
 		this.mesh = new THREE.Group();
-		this.mesh.add(this.head, this.body, this.legL, this.legR, this.armL, this.armR);
+		this.mesh.add( this.body );
+		
 		scene.add(this.mesh);
+		
 		
 	}
 	
@@ -144,6 +151,7 @@ function init() {
 	loader.setCrossOrigin('');
 	texture = loader.load ('https://i.imgur.com/QS32IoD.png?1');
 	steve = buildSteve();
+	t0 = time.getSeconds();
 }
 
 function onWindowResize() {
@@ -153,14 +161,23 @@ function onWindowResize() {
 }
 
 function animate() {
-
 	let dt = clock.getDelta();
-	let R = 50;
-	const HH = 12;
-	let omega = HH/R/T;  
-	theta += omega*dt;
 	let intKey = keyframe(clock.getElapsedTime());
-	steve.move(new THREE.Vector3(R*Math.cos(theta), 0, -R*Math.sin(theta)), Math.PI + theta, intKey[0], intKey[1]);
+	const HH = 12;
+	
+	//move
+	if(bigCircle){//big
+		let R = 50;//半徑
+		let omega = HH/R/T;  
+		thetaB += omega*dt;
+		steve.move(new THREE.Vector3(R*Math.cos(Math.PI - thetaB)-49.9, 0, -R*Math.sin(Math.PI - thetaB)), Math.PI - thetaB, intKey[0], intKey[1]);
+	}
+	else {//small
+		let R = 25;//半徑
+		let omega = HH/R/T;  
+		thetaS += omega*dt;
+		steve.move(new THREE.Vector3(R*Math.cos(thetaS)+25, 0, -R*Math.sin(thetaS)), Math.PI + thetaS, intKey[0], intKey[1]);
+	}
 	
 	//view personView3 0 sky   1 3PV   2 can move camera 
 	if(personView3 == 1) steve.look3PV(4);
@@ -169,7 +186,16 @@ function animate() {
 		camera.position.set (0,200,200);
 		personView3 = 2;
 	}
-	
+	let x = steve.mesh.position.x, z = steve.mesh.position.z;
+	if(Math.floor(x) === 0 & Math.floor(z) === 0){
+		time = new Date();
+		t1 = time.getSeconds();
+		if((t1 - t0) > 1){
+			bigCircle =! bigCircle;
+			t0 = t1;
+		}
+	}
+	console.log(t0, t1);
 	renderer.render(scene,camera);
 	requestAnimationFrame( animate );
 }
