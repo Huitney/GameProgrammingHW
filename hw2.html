@@ -57,7 +57,7 @@ var keys = [
 	[0.5, pose2],
 	[1, pose1]
 ];
-var T = .5;
+var T = 1;
 var clock = new THREE.Clock(), t0, t1;
 var time = new Date();
 var ts = clock.getElapsedTime();
@@ -80,29 +80,25 @@ function keyframe(t) {
 }
 
 class Steve {
-	constructor (head, body, legL, legR, armL, armR, hh, ww) {
+	constructor (body, head, legL, legR, armL, armR, hh, ww) {
 		this.head = head;
 		this.body = body;
 		this.legL = legL;
 		this.legR = legR;
 		this.armL = armL;
 		this.armR = armR;
+		this.mesh = this.body;
 		
-		this.legL.position.set(ww/2,-hh,0);
-		this.legR.position.set(-ww/2,-hh,0);
-		this.armL.position.set(3*ww/2,0,0);
-		this.armR.position.set(-3*ww/2,0,0);
-		this.head.position.set(0,hh/2+ww,0);
+		this.mesh.add (this.head);
+		this.head.position.y = 3*hh/2+ww/2;
+		scene.add (this.mesh);
 		
-		this.body.add(this.head,this.legL, this.legR, this.armL, this.armR);
-		this.body.position.set(0,3*hh/2,0);
-		
-		this.mesh = new THREE.Group();
-		this.mesh.add( this.body );
-		
-		scene.add(this.mesh);
-		
-		
+		this.mesh.position.set (0, 3*hh/2, 0);
+		this.mesh.add( this.legL, this.legR, this.armL, this.armR );
+		this.legL.position.set(ww/2, hh, 0);
+		this.legR.position.set(-ww/2,hh,0);
+		this.armL.position.set(ww+ww/2, hh*2, 0);
+		this.armR.position.set(-ww-ww/2,hh*2,0);
 	}
 	
 	move(pos, rot, shake1, shake2){
@@ -195,7 +191,6 @@ function animate() {
 			t0 = t1;
 		}
 	}
-	console.log(t0, t1);
 	renderer.render(scene,camera);
 	requestAnimationFrame( animate );
 }
@@ -210,13 +205,8 @@ function buildSteve(){
 	let armL = buildArm2(ww,hh,ww);
 	let armR = buildArm2(ww,hh,ww);
 	
-	steve = new Steve(head, body, legL, legR, armL, armR, hh, ww);
-	
-	legL.rotation.x = Math.PI/6;
-	legR.rotation.x = -Math.PI/6;
-	armR.rotation.x = Math.PI/6;
-	armL.rotation.x = -Math.PI/6;
-	
+	steve = new Steve(body, head, legL, legR, armL, armR, hh, ww);
+		
 	return steve;
 }
 
@@ -281,7 +271,10 @@ function buildHead2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 
-	let head = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let head = new THREE.Group();
+	head.add (mesh);
+	mesh.position.y = WW;
 	return head;
 }
 
@@ -346,7 +339,10 @@ function buildLeg2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 
-	let leg = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let leg = new THREE.Group();
+	leg.add (mesh);
+	mesh.position.y = -HH/2;
 	return leg;
 }
 
@@ -411,7 +407,10 @@ function buildArm2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 
-	let arm = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let arm = new THREE.Group();
+	arm.add(mesh);
+	mesh.position.y = -HH/2;
 	return arm;
 }
 
@@ -476,7 +475,10 @@ function buildBody2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 
-	let body = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let body = new THREE.Group();
+	body.add(mesh);
+	mesh.position.set(0, 3*HH/2, 0);
 	return body;
 }
 </script>
