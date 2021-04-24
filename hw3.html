@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>
-</title>
 <style>
 #heading{
 	text-align: center;
@@ -14,16 +12,21 @@
 <body style='overflow:hidden'> 
 
 <div id='heading'>
-	<h3 style = "color:red">Homework 2</h3>
+	<h3 style = "color:red">Homework 3</h3>
 	<button id = "3PV">3rd Person View</button>
 </div>
+
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/misc/Gyroscope.js"></script>
+
 
 <script type ="module">
 javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
 import * as THREE from 'https://unpkg.com/three/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js';
+
 // my script
 
 document.getElementById("3PV").onclick = function (){
@@ -53,7 +56,7 @@ var keys = [
 	[0.5, pose2],
 	[1, pose1]
 ];
-var T = 1;
+var T = .5;
 var clock = new THREE.Clock(), t0, t1;
 var time = new Date();
 var ts = clock.getElapsedTime();
