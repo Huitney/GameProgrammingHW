@@ -13,150 +13,154 @@
 
 <div id='heading'>
 	<h3 style = "color:red">Homework 3<br></h3>
-	<h4 style = "color:red">space to walk</h4>
+	<h4 style = "color:red">press space to walk</h4>
 	<button id = "3PV">3rd Person View</button>
 </div>
 
 <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/misc/Gyroscope.js"></script>
 
 
 <script type ="module">
 javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
-import * as THREE from 'https://unpkg.com/three/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from "https://threejs.org/build/three.module.js";
+import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+import { Gyroscope } from "https://threejs.org/examples/jsm/misc/Gyroscope.js";
 
 // my script
 
-document.getElementById("3PV").onclick = function (){
+$('#3PV').click(function($event){
 	if(personView3 == 1){
-		document.getElementById("3PV").innerHTML = "3rd Person View";
 		personView3 = 0;
+		$('#3PV').text("3rd Person View");
+		steve.mesh.remove(gyro);
 	}
-	else{
-		document.getElementById("3PV").innerHTML = "Sky View";
+	else {
 		personView3 = 1;
+		$('#3PV').text("Sky View");
+		coordinate.copy(camera.position);
+		steve.mesh.add(gyro);
 	}
-}
+})
 
-var camera, scene, renderer;
+var camera, scene, renderer, gyro;
 var texture, steve, personView3 = 0;
 var bigCircle = true;
-var T = .5, walk = 0;
+var T = .5, walk = false;
 var clock = new THREE.Clock(), t0, t1;
 var time = new Date(), ts = clock.getElapsedTime();
 var thetaB = 0, thetaS = Math.PI;
-var state = 'Stand';
+var keyboard = new KeyboardState();
+var state = 'Stand', coordinate = new THREE.Vector3();
 
 var poseWalk0 = {
-  lThigh: Math.PI / 6,
-  rThigh: -Math.PI / 6
+	lThigh: Math.PI / 6,
+	rThigh: -Math.PI / 6
 }
 var poseWalk1 = {
-  lThigh: -Math.PI / 6,
-  rThigh: +Math.PI / 6
+	lThigh: -Math.PI / 6,
+	rThigh: +Math.PI / 6
 }
 var keysWalk = [
-  [0, poseWalk0],
-  [0.5, poseWalk1],
-  [1, poseWalk0]
+	[0, poseWalk0],
+	[0.5, poseWalk1],
+	[1, poseWalk0]
 ];
 var TWalk = 2;
 
 ////////////////////////////////////////////
 //// STAND //////////
 var poseStand0 = { // stand
-  lThigh: 0,
-  rThigh: 0
+	lThigh: 0,
+	rThigh: 0
 }
 var poseStand1 = { // stand
-  lThigh: 0,
-  rThigh: 0
+	lThigh: 0,
+	rThigh: 0
 }
 var keysStand = [
-  [0, poseStand0],
-  [0.5, poseStand0],
-  [1, poseStand1],
+	[0, poseStand0],
+	[0.5, poseStand0],
+	[1, poseStand1],
 ];
 var TStand = 0.5; // any small amount
 
 //// stand-to-walk //////////
 var poseS2W0 = { // stand
-  lThigh: 0,
-  rThigh: 0
+	lThigh: 0,
+	rThigh: 0
 }
 var poseS2W0 = poseStand1; // end of stand
 var poseS2W1 = {
-  lThigh: -Math.PI / 6,
-  rThigh: 0 // right leg stays still
+	lThigh: -Math.PI / 6,
+	rThigh: 0 // right leg stays still
 }
 var poseS2W2 = poseWalk0; // beginning of walk
 var keysS2W = [
-  [0, poseS2W0],
-  [0.5, poseS2W1],
-  [1, poseS2W2],
+	[0, poseS2W0],
+	[0.5, poseS2W1],
+	[1, poseS2W2],
 ];
 var TS2W = TWalk;
 
 //////////////////////////////////////
 
 function keyframeStand(t, T) { // periodic
-  let keys = keysStand;
-  var s = ((t - ts) % T) / T;
+	let keys = keysStand;
+	var s = ((t - ts) % T) / T;
 
-  for (var i = 1; i < keys.length; i++) {
-    if (keys[i][0] > s) break;
-  }
-  // take i-1
-  var ii = i - 1;
-  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
-  intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
-    keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
-  ];
-  return intKey;
+	for (var i = 1; i < keys.length; i++) {
+	if (keys[i][0] > s) break;
+	}
+	// take i-1
+	var ii = i - 1;
+	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+	let intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+	];
+	return intKey;
 }
 
 function keyframeS2W(t, T) {
-  if (t - ts > T) { // end of stand
-    //console.log('switch to walk');
-    ts = t; // reset ts to start of walk
-    state = 'Walk';
-    // end of S2W: return last frame
-    return [poseS2W2.lThigh, poseS2W2.rThigh];
-  }
+	if (t - ts > T) { // end of stand
+		//console.log('switch to walk');
+		ts = t; // reset ts to start of walk
+		state = 'Walk';
+		// end of S2W: return last frame
+		return [poseS2W2.lThigh, poseS2W2.rThigh];
+	}
 
-  // non-periodic stand-to-walk animation
-  let keys = keysS2W;
-  var s = (t - ts) / T;
+	// non-periodic stand-to-walk animation
+	let keys = keysS2W;
+	var s = (t - ts) / T;
 
-  for (var i = 1; i < keys.length; i++) {
-    if (keys[i][0] > s) break;
-  }
-  // take i-1
-  var ii = i - 1;
-  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
-  intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
-    keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
-  ];
-  return intKey;
+	for (var i = 1; i < keys.length; i++) {
+		if (keys[i][0] > s) break;
+	}
+	// take i-1
+	var ii = i - 1;
+	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+	let intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+	];
+	return intKey;
 }
 
 function keyframeWalk(t, T) { // walk; periodic
-  let keys = keysWalk;
-  var s = ((t - ts) % T) / T;
+	let keys = keysWalk;
+	var s = ((t - ts) % T) / T;
 
-  for (var i = 1; i < keys.length; i++) {
-    if (keys[i][0] > s) break;
-  }
-  // take i-1
-  var ii = i - 1;
-  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
-  intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
-    keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
-  ];
-  return intKey;
+	for (var i = 1; i < keys.length; i++) {
+		if (keys[i][0] > s) break;
+	}
+	// take i-1
+	var ii = i - 1;
+	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+	let intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+	];
+	return intKey;
 }
 
 class Steve {
@@ -189,15 +193,6 @@ class Steve {
 		this.armL.rotation.x = shake2;
 		this.armR.rotation.x = shake1;
 	}
-	
-	look3PV(WW){
-		let cameraPos = new THREE.Vector3(0,8*WW,-14*WW);
-		this.head.localToWorld (cameraPos);
-		camera.position.copy (cameraPos);
-		let cameraLookAt = new THREE.Vector3(0,2*WW,0);
-		this.head.localToWorld (cameraLookAt);
-		camera.lookAt (cameraLookAt);
-	}
 }
 
 init();
@@ -208,6 +203,9 @@ function init() {
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
 	camera.position.set (0,200,200);
+	coordinate.copy(camera.position);
+	gyro = new Gyroscope();
+	gyro.add(camera);
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.setClearColor(0x888888);
@@ -227,6 +225,8 @@ function init() {
 	loader.setCrossOrigin('');
 	texture = loader.load ('https://i.imgur.com/QS32IoD.png?1');
 	steve = buildSteve();
+	steve.mesh.position.set(-100, 0, 0);
+	steve.mesh.rotation.y = Math.PI;
 	t0 = time.getSeconds();
 }
 
@@ -238,46 +238,54 @@ function onWindowResize() {
 
 function animate() {
 	let dt = clock.getDelta();
-	let intKey = keyframe(clock.getElapsedTime());
 	const HH = 12;
+	let walktime = clock.getElapsedTime();
 	
 	//space
 	keyboard.update();
 	if (keyboard.down('space')) { // move to walk
-		if(walk === 1){
-			state = 'S2W';
-			let intKey = keyframeS2W(ts, TS2W);
-			lLeg.rotation.x = intKey[0];
-			rLeg.rotation.x = intKey[1];
-			walk = 2;
-		}
-		else walk = 1; 
+		walk = true; 
+		state = 'S2W';
 	}
 	if (keyboard.up('space')) { // move to stand
-		walk = 0; 
+		walk = false; 
+		state = 'Stand';
 	}
-	
-	//move walk 0 stand  1 2walk  2 walk
-	if(walk === 2){
-		if(bigCircle){//big
-			let R = 50;//半徑
+	let intKey;
+	switch (state) {
+		case 'Stand':
+			intKey = keyframeStand(walktime, TStand);
+			break;
+		case 'S2W':
+			intKey = keyframeS2W(walktime, TS2W);
+			break;
+		case 'Walk':
+			intKey = keyframeWalk(walktime, TWalk);
+			break;
+	}
+
+	if(bigCircle){//big
+		let R = 50;//半徑
+		if(walk){
 			let omega = HH/R/T;  
 			thetaB += omega*dt;
-			steve.move(new THREE.Vector3(R*Math.cos(Math.PI - thetaB)-49.9, 0, -R*Math.sin(Math.PI - thetaB)), Math.PI - thetaB, intKey[0], intKey[1]);
 		}
-		else {//small
-			let R = 25;//半徑
+		steve.move(new THREE.Vector3(R*Math.cos(Math.PI - thetaB)-49.9, 0, -R*Math.sin(Math.PI - thetaB)), Math.PI - thetaB, intKey[0], intKey[1]);
+	}
+	else {//small
+		let R = 25;//半徑
+		if(walk){
 			let omega = HH/R/T;  
 			thetaS += omega*dt;
-			steve.move(new THREE.Vector3(R*Math.cos(thetaS)+25, 0, -R*Math.sin(thetaS)), Math.PI + thetaS, intKey[0], intKey[1]);
 		}
+		steve.move(new THREE.Vector3(R*Math.cos(thetaS)+25, 0, -R*Math.sin(thetaS)), Math.PI + thetaS, intKey[0], intKey[1]);
 	}
 	
+	
 	//view personView3 0 sky   1 3PV   2 can move camera 
-	if(personView3 == 1) steve.look3PV(4);
-	else if(personView3 == 0){
+	if(personView3 == 0){
+		camera.position.copy(coordinate);
 		camera.lookAt (0, 0, 0);
-		camera.position.set (0,200,200);
 		personView3 = 2;
 	}
 	let x = steve.mesh.position.x, z = steve.mesh.position.z;
