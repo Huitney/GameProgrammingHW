@@ -266,17 +266,25 @@ function animate() {
 
 	if(bigCircle){//big
 		let R = 50;//半徑
-		if(walk){
+		if(state === 'Walk'){
 			let omega = HH/R/T;  
 			thetaB += omega*dt;
+		}
+		else if(state === 'S2W'){
+			let omega = HH/R/T;  
+			thetaB += omega*dt/2;
 		}
 		steve.move(new THREE.Vector3(R*Math.cos(Math.PI - thetaB)-49.9, 0, -R*Math.sin(Math.PI - thetaB)), Math.PI - thetaB, intKey[0], intKey[1]);
 	}
 	else {//small
 		let R = 25;//半徑
-		if(walk){
+		if(state === 'Walk'){
 			let omega = HH/R/T;  
 			thetaS += omega*dt;
+		}
+		else if(state === 'S2W'){
+			let omega = HH/R/T;  
+			thetaB += omega*dt/2;
 		}
 		steve.move(new THREE.Vector3(R*Math.cos(thetaS)+25, 0, -R*Math.sin(thetaS)), Math.PI + thetaS, intKey[0], intKey[1]);
 	}
