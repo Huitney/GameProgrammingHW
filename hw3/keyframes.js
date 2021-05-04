@@ -106,22 +106,6 @@ function keyframeS2W(t, T, ts) {
 	return intKey;
 }
 
-function keyframeWalk(t, T, ts) { // walk; periodic
-	let keys = keysWalk;
-	var s = ((t - ts) % T) / T;
-
-	for (var i = 1; i < keys.length; i++) {
-		if (keys[i][0] > s) break;
-	}
-	// take i-1
-	var ii = i - 1;
-	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
-	let intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
-		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
-	];
-	return intKey;
-}
-
 function keyframeW2S(t, T, ts) {
     if (t - ts > T) { // end of stand
         //console.log('switch to stand');
@@ -142,7 +126,23 @@ function keyframeW2S(t, T, ts) {
     var ii = i - 1;
     var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
     var intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
-    keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
     ];
     return intKey;
+}
+
+function keyframeWalk(t, T, ts) { // walk; periodic
+	let keys = keysWalk;
+	var s = ((t - ts) % T) / T;
+
+	for (var i = 1; i < keys.length; i++) {
+		if (keys[i][0] > s) break;
+	}
+	// take i-1
+	var ii = i - 1;
+	var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+	let intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+		keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+	];
+	return intKey;
 }

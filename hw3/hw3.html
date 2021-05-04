@@ -48,14 +48,13 @@ $('#3PV').click(function($event){
 
 var camera, scene, renderer, gyro;
 var texture, steve, personView3 = 0;
-var bigCircle = true;
+var bigCircle = 1;
 var T = .5, walk = false;
 var clock = new THREE.Clock(), t0, t1;
 var time = new Date(), ts = clock.getElapsedTime();
-var thetaB = 0, thetaS = Math.PI;
+var thetaB = 0, thetaS = Math.PI, angle;
 var keyboard = new KeyboardState();
 var state = 'Stand', coordinate = new THREE.Vector3();
-
 
 init();
 animate();
@@ -112,7 +111,6 @@ function animate() {
 		state = 'S2W';
 	}
 	if (keyboard.up('space')) { // move to stand
-		walktime = clock.getElapsedTime();// move ts to start of stand
         state = 'W2S'; 
         let intKey = keyframeW2S(walktime, TW2S, ts);
         walk  = false;
@@ -120,6 +118,22 @@ function animate() {
 		steve.legR.rotation.x = intKey[1]; 
 		steve.armL.rotation.x = intKey[1]; 
 		steve.armR.rotation.x = intKey[0];
+	}
+	if (keyboard.pressed('up')) { 
+		if(T >= 0.1) T -= 0.01;
+		else T = 0.1;
+	}
+	if (keyboard.pressed('down')) { 
+		if(T <= 1) T += 0.01;
+		else T = 1;
+	}
+	if (keyboard.pressed('left')) { 
+		bigCircle = 2;
+		angle += 0.01;
+	}
+	if (keyboard.pressed('right')) { 
+		bigCircle = 2;
+		angle -= 0.01;
 	}
 	let intKey;
 	switch (state) {
@@ -139,7 +153,7 @@ function animate() {
             break;
 	}
 
-	if(bigCircle){//big
+	if(bigCircle === 1){//big
 		let R = 50;//半徑
 		if(state === 'Walk'){
 			let omega = HH/R/T;  
@@ -149,9 +163,10 @@ function animate() {
 			let omega = HH/R/T;  
 			thetaB += omega*dt/2;
 		}
+		angle = thetaB;
 		steve.move(new THREE.Vector3(R*Math.cos(Math.PI - thetaB)-49.9, 0, -R*Math.sin(Math.PI - thetaB)), Math.PI - thetaB, intKey[0], intKey[1]);
 	}
-	else {//small
+	else if(bigCircle === 0){//small
 		let R = 25;//半徑
 		if(state === 'Walk'){
 			let omega = HH/R/T;  
@@ -159,9 +174,13 @@ function animate() {
 		}
 		else if(state === 'S2W'){
 			let omega = HH/R/T;  
-			thetaB += omega*dt/2;
+			thetaS += omega*dt/2;
 		}
+		angle = thetaS;
 		steve.move(new THREE.Vector3(R*Math.cos(thetaS)+25, 0, -R*Math.sin(thetaS)), Math.PI + thetaS, intKey[0], intKey[1]);
+	}
+	else{
+		steve.move(new THREE.Vector3(steve.mesh.position.x*Math.cos(angle), 0, steve.mesh.position.z*Math.sin(angle)), Math.PI + angle, intKey[0], intKey[1]);
 	}
 	
 	
@@ -176,7 +195,13 @@ function animate() {
 		time = new Date();
 		t1 = time.getSeconds();
 		if(Math.abs(t1 - t0) > 1){
-			bigCircle =! bigCircle;
+			if(bigCircle === 0){
+				bigCircle = 1;
+			}
+			else if(bigCircle === 1){
+				bigCircle = 0;
+			}
+			
 			t0 = t1;
 		}
 	}
