@@ -38,7 +38,7 @@ class Agent {
 		this.size = 3;
 		this.mesh = mesh;
 		scene.add (mesh);
-		this.MAXSPEED = 10;
+		this.MAXSPEED = 30;
 		this.ARRIVAL_R = 30;
 
 		// for orientable agent
@@ -64,7 +64,7 @@ class Agent {
 		this.vel.setLength(Math.clamp (speed, 0, this.MAXSPEED))
 		this.pos.add(this.vel.clone().multiplyScalar(dt))
 		this.mesh.position.copy(this.pos);
-		//console.log(speed);
+		console.log(this.pos);
 
 		// for orientable agent
 		if (this.vel.length() > 1) {
@@ -94,12 +94,16 @@ class Agent {
 		if (this.target)
 			this.force.add(this.targetInducedForce(this.target));
 		let pS, pE;
-		if(this.pos.x <= 0) {
+		if(this.pos.x <= -20) {
 			pS = new THREE.Vector3(-50, 0, 0);
-			pE = new THREE.Vector3(0, 25, 0);
+			pE = new THREE.Vector3(-20,20,0);
+		}
+		else if(this.pos.x<=20){
+			pS = new THREE.Vector3(-20,20,0);
+			pE = new THREE.Vector3(20,-20,0);
 		}
 		else{
-			pS = new THREE.Vector3(0, 25, 0);
+			pS = new THREE.Vector3(20,-20,0);
 			pE = new THREE.Vector3(50, 0, 0);
 		}
 		let pHat = pE.clone().sub(pS).normalize();
@@ -110,7 +114,7 @@ class Agent {
 		let proj = pHat.multiplyScalar(tmp.dot(pHat)).add(pS);
 		let distance = posF.distanceTo(proj);
 		
-		if(distance >= radius/2) {
+		if(distance > radius) {
 			let correction = this.targetInducedForce(proj, 1);
 			this.force.add (correction);
 		}
@@ -155,8 +159,9 @@ function init() {
  
 	/////////////////////////////////////////////////////////
 	setTimeout(addAgent, 0);  
-	drawPath(new THREE.Vector3 (-50,0,0), new THREE.Vector3 (0,25,0));
-	drawPath(new THREE.Vector3 (0,25,0), new THREE.Vector3 (50,0,0));
+	drawPath(new THREE.Vector3 (-50,0,0), new THREE.Vector3 (-20,20,0));
+	drawPath(new THREE.Vector3 (-20,20,0), new THREE.Vector3 (20,-20,0));
+	drawPath(new THREE.Vector3 (20,-20,0), new THREE.Vector3 (50,0,0));
 	
 }
 
