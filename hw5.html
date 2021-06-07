@@ -180,7 +180,7 @@ function init() {
 }
 
 function drawPath(pS, pE){
-	radius = 3;
+	radius = 5;
 	let pathLen = pS.clone().distanceTo(pE);
 	let end = new THREE.Mesh (new THREE.CircleGeometry (radius,20), new THREE.MeshBasicMaterial({color:'yellow', transparent:true, opacity:0.2}));
 
