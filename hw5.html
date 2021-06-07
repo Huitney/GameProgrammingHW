@@ -115,7 +115,7 @@ class Agent {
 		let proj = pHat.multiplyScalar(tmp.dot(pHat)).add(pS);
 		let distance = posF.distanceTo(proj);
 		
-		if(distance > radius) {
+		if(distance > radius/2) {
 			let correction = this.targetInducedForce(proj, 1);
 			this.force.add (correction);
 		}
