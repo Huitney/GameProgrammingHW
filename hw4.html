@@ -5,31 +5,44 @@
 </title>
 <style>
 #heading{
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	padding: 10px;
 	text-align: center;
-	position:absolute;
-	width:100vw;
 }
 </style>
 </head>
 <body style='overflow:hidden'> 
 
 <div id='heading'>
-	<h3 style = "color:red">hw4</h3>
-	<button id = "steer">change to cohesion</button>
+	<h3 style='color:red'>hw4</h3>
+	separation
+	<input type=range min=0 max=100 id='sRange'> 
+	<br>
+	cohesion  
+	<input type=range min=0 max=100 id='cRange'>
+	<br>
+	alignment 
+	<input type=range id='aRange' min=0 max=100>
 </div>
 
 <script src="https://threejs.org/build/three.min.js"></script>
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-
+  
 <script type ="module">
 javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='https://mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
-$('#steer').click(function($event){
-	cohesion =! cohesion;
-	if(cohesion) $('#steer').text("change to separation");
-	else $('#steer').text("change to cohesion");
-})
+$('#seRange').change( function() {
+	separation = $(this).val();
+});
+$('#coRange').change( function() {
+	cohesion = $(this).val();
+});
+$('#alRange').change( function() {
+	alignment = $(this).val();
+});
 
 class Obstacle {
 	constructor (center,size) {
@@ -129,32 +142,34 @@ class Agent {
 		////////////////////////////////////////
 		// group steer related
 		let push = new THREE.Vector3();
-		if(!cohesion){
-			// separation
-			console.log('separation');
-			for (let i = 0; i < this.nbhd.length; i++) {
-				let point = this.pos.clone().sub(this.nbhd[i].pos);
-				push.add(point.setLength(120 / point.length()));
+		let pull = new THREE.Vector3();
+		
+		// separation
+		//console.log('separation');
+		for (let i = 0; i < this.nbhd.length; i++) {
+			let point = this.pos.clone().sub(this.nbhd[i].pos);
+			push.add(point.setLength(120 / point.length()));
+		}
+		push.multiplyScalar(separation/100);
+		this.force.add(push);
+		
+		// coherence
+		//console.log('coherence');
+		if (this.nbhd.length > 0) { // 如果this.nbhd有其他agents
+			let x = 0, z = 0;
+			for(let i = 0; i < this.nbhd.length; i++) {// 算出 nbhd的平均位置
+				x += this.nbhd[i].pos.x;
+				z += this.nbhd[i].pos.z;
 			}
-			this.force.add(push);
-		}else{
-			// coherence
-			console.log('coherence');
-			if (this.nbhd.length > 0) { // 如果this.nbhd有其他agents
-				let x = 0, z = 0;
-				for(let i = 0; i < this.nbhd.length; i++) {// 算出 nbhd的平均位置
-					x += this.nbhd[i].pos.x;
-					z += this.nbhd[i].pos.z;
-				}
-				x /= this.nbhd.length;
-				z /= this.nbhd.length;
-				
-				// 利用 targetInducedForce （來吸引 this 往平均位置靠近）	
-				let point = this.pos.clone().sub(new THREE.Vector3(x, 0, z));
-				push.add(point.setLength(120 / point.length()));
-				// 將此力加到 this.force
-				this.force.add(push);
-			}
+			x /= this.nbhd.length;
+			z /= this.nbhd.length;
+			
+			// 利用 targetInducedForce （來吸引 this 往平均位置靠近）	
+			let point = this.pos.clone().sub(new THREE.Vector3(x, 0, z));
+			pull.add(point.setLength(120 / point.length()));
+			// 將此力加到 this.force
+			pull.multiplyScalar(coherence/100);
+			this.force.add(pull);
 		}
 	}
 	distanceTo(otherAgent) {
@@ -189,7 +204,7 @@ var raycaster;
 var mouse = new THREE.Vector2();
 var pickables = [];
 var agents = [];
-var target, cohesion = false;
+var target, cohesion = 50, separation = 50, alignment = 50;
 
 init();
 animate();
